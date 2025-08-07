@@ -384,7 +384,7 @@ const WalletManager: React.FC = () => {
     config: {
       rpcEndpoint: 'https://smart-special-thunder.solana-mainnet.quiknode.pro/1366b058465380d24920f9d348f85325455d398d/',
       transactionFee: '0.001',
-      apiKey: '',
+      apiKey: '6882d3d22d749bedb2095466',
       selectedDex: 'auto',
       isDropdownOpen: false,
       buyAmount: '',
