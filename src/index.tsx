@@ -36,7 +36,6 @@ interface ServerInfo {
 }
 
 const DEFAULT_REGIONAL_SERVERS: ServerInfo[] = [
-  { id: 'us', name: 'United States', url: 'https://us.fury.bot/', region: 'US', flag: '🇺🇸' },
   { id: 'de', name: 'Germany', url: 'https://de.fury.bot/', region: 'DE', flag: '🇩🇪' },
   { id: 'it', name: 'Italy', url: 'https://it.fury.bot/', region: 'IT', flag: '🇮🇹' },
   { id: 'nl', name: 'Netherlands', url: 'https://nl.fury.bot/', region: 'NL', flag: '🇳🇱' },
