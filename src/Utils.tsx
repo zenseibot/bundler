@@ -104,7 +104,7 @@ const CONFIG_COOKIE_KEY = 'config';
 const QUICK_BUY_COOKIE_KEY = 'quickBuyPreferences';
 
 // Encryption setup
-const ENCRYPTION_KEY = 'zensei-bot-wallet-encryption-key';
+const ENCRYPTION_KEY = 'raze-bot-wallet-encryption-key';
 const ENCRYPTED_STORAGE_KEY = 'encrypted_wallets';
 
 // Encryption helper functions
