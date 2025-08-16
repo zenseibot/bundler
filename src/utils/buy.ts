@@ -23,7 +23,7 @@ export type BundleMode = 'single' | 'batch' | 'all-in-one';
 
 export interface BuyConfig {
   tokenAddress: string;
-  protocol: 'pumpfun' | 'moonshot' | 'launchpad' | 'raydium' | 'pumpswap' | 'auto' | 'boopfun' | 'auto';
+  protocol: 'pumpfun' | 'moonshot' | 'launchpad' | 'raydium' | 'pumpswap' | 'auto' | 'boopfun' | 'meteora' | 'auto';
   solAmount: number;
   amounts?: number[]; // Optional custom amounts per wallet
   slippageBps?: number; // Slippage in basis points (e.g., 100 = 1%)
@@ -143,7 +143,7 @@ const getPartiallyPreparedTransactions = async (
       const feeInSol = appConfig?.transactionFee || '0.005';
       requestBody.jitoTipLamports = Math.floor(parseFloat(feeInSol) * 1_000_000_000);
     }
-
+    console.log(appConfig)
     const response = await fetch(`${baseUrl}/api/tokens/buy`, {
       method: 'POST',
       headers: {

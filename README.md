@@ -57,7 +57,7 @@ Visit: `http://localhost:5173`
 ## 🗂 Project Structure
 
 ```
-raze.bot/
+zensei.bot/
 ├── src/                # Source code
 │   ├── modals/         # Modal components
 │   │   ├── BurnModal.tsx
@@ -80,9 +80,6 @@ raze.bot/
 │   │   └── WalletsModal.tsx
 │   ├── styles/         # CSS and styling
 │   │   ├── Styles.tsx
-│   │   ├── betterskill.css
-│   │   ├── raze.css
-│   │   ├── yellow.css
 │   │   └── globals.css
 │   ├── utils/          # Utility functions
 │   │   ├── bonkcreate.ts

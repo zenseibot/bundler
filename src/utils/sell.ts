@@ -23,7 +23,7 @@ export type BundleMode = 'single' | 'batch' | 'all-in-one';
 
 export interface SellConfig {
   tokenAddress: string;
-  protocol: 'pumpfun' | 'moonshot' | 'launchpad' | 'raydium' | 'pumpswap' | 'auto' | 'boopfun' | 'auto';
+  protocol: 'pumpfun' | 'moonshot' | 'launchpad' | 'raydium' | 'pumpswap' | 'auto' | 'boopfun' | 'meteora'| 'auto';
   sellPercent: number; // Percentage of tokens to sell (1-100)
   slippageBps?: number; // Slippage tolerance in basis points (e.g., 100 = 1%)
   outputMint?: string; // Output token (usually SOL) - mainly for Auto
@@ -141,7 +141,7 @@ const getPartiallyPreparedSellTransactions = async (
     }
 
     // Add Auto-specific parameters if needed
-    if (sellConfig.protocol === 'auto' || sellConfig.protocol === 'auto') {
+    if (sellConfig.protocol === 'auto') {
       if (sellConfig.outputMint) {
         requestBody.outputMint = sellConfig.outputMint;
       }
@@ -554,7 +554,7 @@ export const validateSellInputs = (
   }
   
   // Validate Auto-specific parameters
-  if ((sellConfig.protocol === 'auto' || sellConfig.protocol === 'auto') && sellConfig.slippageBps !== undefined) {
+  if ((sellConfig.protocol === 'auto') && sellConfig.slippageBps !== undefined) {
     if (isNaN(sellConfig.slippageBps) || sellConfig.slippageBps < 0) {
       return { valid: false, error: 'Invalid slippage value' };
     }

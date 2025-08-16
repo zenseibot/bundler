@@ -104,7 +104,7 @@ const CONFIG_COOKIE_KEY = 'config';
 const QUICK_BUY_COOKIE_KEY = 'quickBuyPreferences';
 
 // Encryption setup
-const ENCRYPTION_KEY = 'raze-bot-wallet-encryption-key';
+const ENCRYPTION_KEY = 'zensei-bot-wallet-encryption-key';
 const ENCRYPTED_STORAGE_KEY = 'encrypted_wallets';
 
 // Encryption helper functions
@@ -374,13 +374,11 @@ export const fetchWalletBalances = async (
       }
     } catch (error) {
       console.error(`Error fetching balances for ${wallet.address}:`, error);
-      // Don't modify the balance maps on error - existing balances are preserved
-      // This prevents balances from being reset during refresh operations
     }
     
     // Add 100ms delay between wallets (except for the last one)
     if (i < wallets.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 5));
     }
   }
   
@@ -707,6 +705,7 @@ export interface QuickBuyPreferences {
   quickBuyMinAmount: number;
   quickBuyMaxAmount: number;
   useQuickBuyRange: boolean;
+  quickSellPercentage: number;
 }
 
 export const saveQuickBuyPreferencesToCookies = (preferences: QuickBuyPreferences) => {
