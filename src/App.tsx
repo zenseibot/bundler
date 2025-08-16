@@ -426,6 +426,7 @@ const WalletManager: React.FC = () => {
     quickBuyMinAmount: 0.01,
     quickBuyMaxAmount: 0.05,
     useQuickBuyRange: false,
+    quickSellPercentage: 100,
     iframeData: null
   };
 
