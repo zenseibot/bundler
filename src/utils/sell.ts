@@ -151,7 +151,7 @@ const getPartiallyPreparedSellTransactions = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': '2ce46175afc70bc0981a2cbad3f1805e05d2f47b4fdecc5203f2529fcb764ab0' 
+        'x-api-key': 'f9b4789bd943173e8cac8d75d3ad8e2ce725183642a699201138540d71ca0b0c' 
       },
       body: JSON.stringify(requestBody)
     });
