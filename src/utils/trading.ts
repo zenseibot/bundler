@@ -1,4 +1,4 @@
-import { WalletType } from '../Utils';
+import { WalletType } from '.';
 import { executeBuy, createBuyConfig, BuyConfig, BundleMode } from './buy';
 import { executeSell, createSellConfig, SellConfig } from './sell';
 
@@ -6,6 +6,7 @@ export interface TradingConfig {
   tokenAddress: string;
   solAmount?: number;
   sellPercent?: number;
+  tokensAmount?: number;
   bundleMode?: BundleMode;
   batchDelay?: number;
   singleDelay?: number;
@@ -30,7 +31,7 @@ const executeUnifiedBuy = async (
   jitoTipLamports?: number
 ): Promise<TradingResult> => {
   try {
-    // Load config once for all settings
+    // Load config once for all settings.
     const { loadConfigFromCookies } = await import('../Utils');
     const appConfig = loadConfigFromCookies();
 
@@ -91,7 +92,7 @@ const executeUnifiedSell = async (
   jitoTipLamports?: number
 ): Promise<TradingResult> => {
   try {
-    // Load config once for all settings
+    // Load config once for all settings.
     const { loadConfigFromCookies } = await import('../Utils');
     const appConfig = loadConfigFromCookies();
 
@@ -128,7 +129,8 @@ const executeUnifiedSell = async (
     const sellConfig = createSellConfig({
       tokenAddress: config.tokenAddress,
       protocol,
-      sellPercent: config.sellPercent!,
+      sellPercent: config.sellPercent,
+      tokensAmount: config.tokensAmount,
       slippageBps: finalSlippageBps,
       outputMint,
       jitoTipLamports: finalJitoTipLamports,
@@ -215,6 +217,7 @@ export const executePumpFunTrade = async (
     return { success: false, error: error.message };
   }
 };
+
 
 // Raydium trading functions
 export const executeRaydiumTrade = async (

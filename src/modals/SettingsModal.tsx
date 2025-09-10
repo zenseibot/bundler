@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Plus, Upload, FileUp, Download, Trash2, Settings, Globe, Zap, Wallet, Key, Save } from 'lucide-react';
 import { Connection } from '@solana/web3.js';
+import bs58 from 'bs58';
 import { WalletTooltip } from '../styles/Styles';
 import { 
   createNewWallet,
@@ -187,6 +188,39 @@ const EnhancedSettingsModal: React.FC<EnhancedSettingsModalProps> = ({
         const trimmedText = text.trim();
         if (base58Pattern.test(trimmedText)) {
           foundKeys = [trimmedText];
+        }
+      } else if (fileExtension === 'json') {
+        // For .json files, parse as keypair JSON format
+        try {
+          const jsonData = JSON.parse(text);
+          
+          // Handle single keypair JSON (array of numbers)
+          if (Array.isArray(jsonData) && jsonData.length === 64) {
+            // Convert array of numbers to Uint8Array and then to base58
+            const secretKey = new Uint8Array(jsonData);
+            const privateKey = bs58.encode(secretKey);
+            foundKeys = [privateKey];
+          }
+          // Handle multiple keypairs in an array
+          else if (Array.isArray(jsonData)) {
+            for (const item of jsonData) {
+              if (Array.isArray(item) && item.length === 64) {
+                const secretKey = new Uint8Array(item);
+                const privateKey = bs58.encode(secretKey);
+                foundKeys.push(privateKey);
+              }
+            }
+          }
+          // Handle object with keypair data
+          else if (jsonData.secretKey && Array.isArray(jsonData.secretKey)) {
+            const secretKey = new Uint8Array(jsonData.secretKey);
+            const privateKey = bs58.encode(secretKey);
+            foundKeys = [privateKey];
+          }
+        } catch (jsonError) {
+          setImportError('Invalid JSON format');
+          setIsProcessingFile(false);
+          return;
         }
       } else {
         // For .txt files, process line by line
@@ -394,7 +428,7 @@ const EnhancedSettingsModal: React.FC<EnhancedSettingsModalProps> = ({
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".txt,.key"
+                        accept=".txt,.key,.json"
                         onChange={handleFileUpload}
                         className="hidden"
                         disabled={isProcessingFile}
@@ -409,7 +443,7 @@ const EnhancedSettingsModal: React.FC<EnhancedSettingsModalProps> = ({
                         } border border-app-primary-40 rounded font-mono text-sm transition-all duration-300 flex items-center justify-center gap-2`}
                       >
                         <FileUp size={16} />
-                        {isProcessingFile ? 'PROCESSING FILE...' : 'IMPORT FROM FILE (.txt/.key)'}
+                        {isProcessingFile ? 'PROCESSING FILE...' : 'IMPORT FROM FILE (.txt/.key/.json)'}
                       </button>
                     </div>
                   </div>
@@ -504,6 +538,53 @@ const EnhancedSettingsModal: React.FC<EnhancedSettingsModalProps> = ({
                       placeholder="0.000005"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Trading Server Configuration Section */}
+              <div className="bg-app-secondary border border-app-primary-30 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-app-primary font-mono mb-4 flex items-center gap-2">
+                  <Globe size={20} className="color-primary" />
+                  TRADING SERVER
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-app-tertiary border border-app-primary-30 rounded-lg">
+                    <div>
+                      <div className="text-sm font-medium text-app-primary font-mono">Enable Self-Hosted Trading API</div>
+                      <div className="text-xs text-app-secondary font-mono">Use your own trading server instead of default service</div>
+                    </div>
+                    <button
+                      onClick={() => onConfigChange('tradingServerEnabled', config.tradingServerEnabled === 'true' ? 'false' : 'true')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        config.tradingServerEnabled === 'true' ? 'bg-app-primary-color' : 'bg-app-primary-30'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          config.tradingServerEnabled === 'true' ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  
+                  {config.tradingServerEnabled === 'true' && (
+                    <div>
+                      <label className="block text-sm text-app-secondary font-mono mb-2 uppercase tracking-wider">
+                        Trading Server URL
+                      </label>
+                      <input
+                        type="text"
+                        value={config.tradingServerUrl || 'http://localhost:4444'}
+                        onChange={(e) => onConfigChange('tradingServerUrl', e.target.value)}
+                        className="w-full bg-app-tertiary border border-app-primary-40 rounded p-3 text-sm text-app-primary focus-border-primary focus:outline-none cyberpunk-input font-mono"
+                        placeholder="http://localhost:4444"
+                      />
+                      <div className="text-xs text-app-secondary-80 font-mono mt-1">
+                        Enter the URL of your self-hosted trading API server
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

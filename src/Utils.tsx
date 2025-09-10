@@ -2,6 +2,7 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
 import Cookies from 'js-cookie';
 import CryptoJS from 'crypto-js';
+import { TradingStrategy } from './automate/types';
 
 export interface WalletType {
   id: number;
@@ -24,6 +25,8 @@ export interface ConfigType {
   bundleMode: string; // Default bundle mode preference ('single', 'batch', 'all-in-one')
   singleDelay: string; // Delay between wallets in single mode (milliseconds)
   batchDelay: string; // Delay between batches in batch mode (milliseconds)
+  tradingServerEnabled: string; // Whether to use self-hosted trading server ('true' or 'false')
+  tradingServerUrl: string; // URL of the self-hosted trading server
 }
 
 export const toggleWallet = (wallets: WalletType[], id: number): WalletType[] => {
@@ -102,9 +105,11 @@ const loadWalletsFromIndexedDB = (): Promise<WalletType[]> => {
 const WALLET_COOKIE_KEY = 'wallets';
 const CONFIG_COOKIE_KEY = 'config';
 const QUICK_BUY_COOKIE_KEY = 'quickBuyPreferences';
+const TRADING_STRATEGIES_COOKIE_KEY = 'tradingStrategies';
+const USER_COOKIE_KEY = 'user';
 
 // Encryption setup
-const ENCRYPTION_KEY = 'raze-bot-wallet-encryption-key';
+const ENCRYPTION_KEY = 'zensei-bot-wallet-encryption-key';
 const ENCRYPTED_STORAGE_KEY = 'encrypted_wallets';
 
 // Encryption helper functions
@@ -651,6 +656,13 @@ export const loadConfigFromCookies = (): ConfigType | null => {
       if (config.batchDelay === undefined) {
         config.batchDelay = '1000'; // Default 1000ms delay between batches
       }
+      // Handle backward compatibility for trading server settings
+      if (config.tradingServerEnabled === undefined) {
+        config.tradingServerEnabled = 'false'; // Default to disabled
+      }
+      if (config.tradingServerUrl === undefined) {
+        config.tradingServerUrl = 'localhost:4444'; // Default URL
+      }
       return config;
     } catch (error) {
       console.error('Error parsing saved config:', error);
@@ -723,4 +735,34 @@ export const loadQuickBuyPreferencesFromCookies = (): QuickBuyPreferences | null
     }
   }
   return null;
+};
+
+export const saveTradingStrategiesToCookies = (strategies: TradingStrategy[]) => {
+  Cookies.set(TRADING_STRATEGIES_COOKIE_KEY, JSON.stringify(strategies), { expires: 30 });
+};
+
+export const loadTradingStrategiesFromCookies = (): TradingStrategy[] => {
+  const savedStrategies = Cookies.get(TRADING_STRATEGIES_COOKIE_KEY);
+  if (savedStrategies) {
+    try {
+      return JSON.parse(savedStrategies);
+    } catch (error) {
+      console.error('Error parsing saved trading strategies:', error);
+      return [];
+    }
+  }
+  return [];
+};
+
+export const saveUserToCookies = (user: string) => {
+  Cookies.set(USER_COOKIE_KEY, user, { expires: 30 });
+};
+
+export const loadUserFromCookies = (): string | null => {
+  const savedUser = Cookies.get(USER_COOKIE_KEY);
+  return savedUser || null;
+};
+
+export const removeUserFromCookies = () => {
+  Cookies.remove(USER_COOKIE_KEY);
 };

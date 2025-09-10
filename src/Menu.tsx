@@ -211,6 +211,49 @@ const ServiceSelector = () => {
                   initial="hidden"
                   animate="show"
                 >
+                  {/* Solana */}
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      show: { opacity: 1, y: 0 }
+                    }}
+                  >
+                    <CyberpunkServiceButton 
+                      icon={<div className="bg-[#9945FF] rounded-full w-8 h-8 flex items-center justify-center overflow-hidden">
+                        <svg viewBox="0 0 397 311" width="22" height="22">
+                          <path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h320.3c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z" fill="#FFFFFF"/>
+                          <path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h320.3c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" fill="#FFFFFF"/>
+                          <path d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H3.6c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h320.3c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" fill="#FFFFFF"/>
+                        </svg>
+                      </div>} 
+                      label="Launchpad" 
+                      url="https://app.Zensei.bot"
+                      description="Launchpad"
+                    />
+                  </motion.div>
+                  
+                  {/* Docs */}
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      show: { opacity: 1, y: 0 }
+                    }}
+                  >
+                    <CyberpunkServiceButton 
+                      icon={<div className="bg-[#0066FF] rounded-lg w-8 h-8 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="#FFFFFF" stroke="#FFFFFF" strokeWidth="0.5" />
+                          <polyline points="14 2 14 8 20 8" fill="none" stroke="#FFFFFF" strokeWidth="1" />
+                          <line x1="16" y1="13" x2="8" y2="13" stroke="#FFFFFF" strokeWidth="1" />
+                          <line x1="16" y1="17" x2="8" y2="17" stroke="#FFFFFF" strokeWidth="1" />
+                          <polyline points="10 9 9 9 8 9" stroke="#FFFFFF" strokeWidth="1" />
+                        </svg>
+                      </div>} 
+                      label="Docs" 
+                      url="https://docs.Zensei.bot"
+                      description="Documentation"
+                    />
+                  </motion.div>
                   
                   {/* GitHub */}
                   <motion.div
@@ -226,7 +269,7 @@ const ServiceSelector = () => {
                         </svg>
                       </div>} 
                       label="GitHub" 
-                      url="https://github.com/zenseibot/bundler"
+                      url="https://github.com/Zenseidotbot"
                       description="GitHub Repository"
                     />
                   </motion.div>
