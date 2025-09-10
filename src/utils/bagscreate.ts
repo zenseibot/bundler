@@ -1,6 +1,6 @@
 import { Keypair, VersionedTransaction, PublicKey, SystemProgram, TransactionMessage, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import bs58 from 'bs58';
-import { loadConfigFromCookies } from '.';
+import { loadConfigFromCookies } from '../Utils';
 
 // Constants for rate limiting
 const MAX_BUNDLES_PER_SECOND = 2;

@@ -1,4 +1,4 @@
-import { WalletType } from '.';
+import { WalletType } from '../Utils';
 import { executeBuy, createBuyConfig, BuyConfig, BundleMode } from './buy';
 import { executeSell, createSellConfig, SellConfig } from './sell';
 
@@ -31,7 +31,7 @@ const executeUnifiedBuy = async (
   jitoTipLamports?: number
 ): Promise<TradingResult> => {
   try {
-    // Load config once for all settings.
+    // Load config once for all settings
     const { loadConfigFromCookies } = await import('../Utils');
     const appConfig = loadConfigFromCookies();
 
@@ -92,7 +92,7 @@ const executeUnifiedSell = async (
   jitoTipLamports?: number
 ): Promise<TradingResult> => {
   try {
-    // Load config once for all settings.
+    // Load config once for all settings
     const { loadConfigFromCookies } = await import('../Utils');
     const appConfig = loadConfigFromCookies();
 

@@ -1,7 +1,7 @@
 import { Keypair, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
 // Note: Import loadConfigFromCookies from your Utils module if available
-import { loadConfigFromCookies } from '.';
+import { loadConfigFromCookies } from '../Utils';
 
 const MAX_BUNDLES_PER_SECOND = 2;
 

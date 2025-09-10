@@ -1,4 +1,4 @@
-import { WalletType } from '.';
+import { WalletType } from '../Utils';
 
 // Script types for different DEX and operation combinations
 export type ScriptType = 
