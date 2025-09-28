@@ -1,6 +1,7 @@
 import { Keypair, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { loadConfigFromCookies, loadUserFromCookies } from '../Utils';
+import { brand } from '../config/brandConfig';
 
 // Constants
 const MAX_BUNDLES_PER_SECOND = 2;
@@ -23,7 +24,7 @@ export type BundleMode = 'single' | 'batch' | 'all-in-one';
 
 export interface SellConfig {
   tokenAddress: string;
-  protocol: 'pumpfun' | 'moonshot' | 'launchpad' | 'raydium' | 'pumpswap' | 'auto' | 'boopfun' | 'meteora' | 'auto';
+  protocol: 'auto';
   sellPercent: number; // Percentage of tokens to sell (1-100)
   tokensAmount?: number; // Specific amount of tokens to sell (alternative to percentage)
   slippageBps?: number; // Slippage tolerance in basis points (e.g., 100 = 1%)
@@ -187,7 +188,7 @@ const getPartiallyPreparedSellTransactions = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': 'f9b4789bd943173e8cac8d75d3ad8e2ce725183642a699201138540d71ca0b0c' 
+        'X-API-Key': brand.api.key
       },
       body: JSON.stringify(requestBody)
     });
@@ -610,7 +611,7 @@ export const validateSellInputs = (
     return { valid: false, error: 'Protocol is required' };
   }
   
-  const validProtocols = ['pumpfun', 'moonshot', 'launchpad', 'raydium', 'pumpswap', 'auto', 'boopfun', 'meteora', 'auto'];
+  const validProtocols = ['auto'];
 
   if (!validProtocols.includes(sellConfig.protocol)) {
     return { valid: false, error: `Invalid protocol. Must be one of: ${validProtocols.join(', ')}` };

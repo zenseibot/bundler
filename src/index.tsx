@@ -6,7 +6,20 @@ import { Buffer as NodeBuffer } from 'buffer';
 import Cookies from 'js-cookie';
 import { Buffer } from 'buffer';
 window.Buffer = Buffer;
-import './styles/globals.css';
+import { brand } from './config/brandConfig';
+
+// Dynamic CSS loading based on brand configuration
+const loadBrandCSS = () => {
+  const cssPath = brand.theme.css;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = cssPath;
+  link.id = 'brand-css';
+  document.head.appendChild(link);
+};
+
+// Load brand CSS immediately
+loadBrandCSS();
 import { ToastProvider } from "./Notifications";
 import ServerConfig from './ServerConfig';
 import IntroModal from './modals/IntroModal';

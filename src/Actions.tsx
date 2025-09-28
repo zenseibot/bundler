@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
    Download, 
    Settings2,
@@ -18,12 +18,12 @@ import {
    Coins,
    Bot
  } from 'lucide-react';
+import { brand } from './config/brandConfig';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { WalletType, loadConfigFromCookies } from "./Utils";
 import { useToast } from "./Notifications";
 import { countActiveWallets, getScriptName } from './utils/wallets';
 import TradingCard from './TradingForm';
-import AutomateFloatingCard from './AutomateFloatingCard';
 
 import { executeTrade } from './utils/trading';
 
@@ -57,6 +57,7 @@ Switch.displayName = 'Switch';
 
 interface ActionsPageProps {
   tokenAddress: string;
+  setTokenAddress: (address: string) => void;
   transactionFee: string;
   handleRefresh: () => void;
   wallets: WalletType[];
@@ -347,6 +348,7 @@ const DataBox: React.FC<{
 };
 export const ActionsPage: React.FC<ActionsPageProps> = ({ 
   tokenAddress, 
+  setTokenAddress,
   transactionFee, 
   handleRefresh, 
   wallets, 
@@ -369,7 +371,7 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
   setAutomateCardDragging,
   iframeData
 }) => {
-  // State management (no changes)
+  // State management
   const [buyAmount, setBuyAmount] = useState('');
   const [sellAmount, setSellAmount] = useState('');
   const [selectedDex, setSelectedDex] = useState('auto'); // Default to auto
@@ -378,23 +380,20 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
   const [tokenPrice, setTokenPrice] = useState<string | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
   const { showToast } = useToast();
-
-
-  const dexOptions = [
-    { value: 'auto', label: '⭐ Auto', icon: '⭐' },
-    { value: 'pumpfun', label: 'PumpFun' },
-    { value: 'moonshot', label: 'Moonshot' },
-    { value: 'pumpswap', label: 'PumpSwap' },
-    { value: 'raydium', label: 'Raydium' },
-    { value: 'launchpad', label: 'Launchpad' },
-    { value: 'boopfun', label: 'BoopFun' },
-    { value: 'meteora', label: 'Meteora' },
-  ];
   
-  const handleTradeSubmit = async (wallets: WalletType[], isBuyMode: boolean, dex?: string, buyAmount?: string, sellAmount?: string) => {
+  // Auto-buy settings
+  const [autoBuyEnabled, setAutoBuyEnabled] = useState(true);
+  const [autoBuyAmount, setAutoBuyAmount] = useState('0.01'); // Default SOL amount for auto-buy
+  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(false); // Auto redirect to token after buy
+
+
+  const handleTradeSubmit = async (wallets: WalletType[], isBuyMode: boolean, dex?: string, buyAmount?: string, sellAmount?: string, tokenAddressParam?: string) => {
     setIsLoading(true);
     
-    if (!tokenAddress) {
+    // Use tokenAddressParam if provided, otherwise use the component's tokenAddress
+    const tokenAddressToUse = tokenAddressParam || tokenAddress;
+    
+    if (!tokenAddressToUse) {
       showToast("Please select a token first", "error");
       setIsLoading(false);
       return;
@@ -406,14 +405,14 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
       
       // Create trading config
        const config = {
-         tokenAddress: tokenAddress,
+         tokenAddress: tokenAddressToUse,
          ...(isBuyMode 
            ? { solAmount: parseFloat(buyAmount || '0') }
            : { sellPercent: parseFloat(sellAmount || '0') }
          )
        };
       
-      console.log(`Executing ${isBuyMode ? 'Buy' : 'Sell'} on ${dexToUse} for ${tokenAddress}`);
+      console.log(`Executing ${isBuyMode ? 'Buy' : 'Sell'} on ${dexToUse} for ${tokenAddressToUse}`);
       
       // Execute trade using centralized logic
       const result = await executeTrade(dexToUse, wallets, config, isBuyMode, solBalances);
@@ -430,6 +429,74 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Handle iframe messages for TOKEN_SELECTED and TOKEN_BUY
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Handle TOKEN_SELECTED message (only for token selection, no auto-buy)
+      if (event.data && event.data.type === 'TOKEN_SELECTED') {
+        console.log('Received TOKEN_SELECTED message:', event.data);
+      }
+      
+      // Handle TOKEN_BUY message for quick buy functionality
+      if (event.data && event.data.type === 'TOKEN_BUY') {
+        console.log('Received TOKEN_BUY message:', event.data);
+        
+        // Try different possible property names for the token address
+        const tokenMint = event.data.tokenMint || event.data.tokenAddress || event.data.token || event.data.mint;
+        console.log('Quick buy requested for token:', tokenMint);
+        
+        if (tokenMint) {
+          // Get active wallets
+          const activeWallets = wallets.filter(wallet => wallet.isActive);
+          
+          if (activeWallets.length > 0) {
+            // Execute buy with the specified amount and token address from the message
+            handleTradeSubmit(activeWallets, true, 'auto', autoBuyAmount, undefined, tokenMint);
+            showToast(`Quick buying ${autoBuyAmount} SOL of token ${tokenMint.substring(0, 8)}...`, "success");
+            
+            // Auto redirect to token if enabled
+            if (autoRedirectEnabled && setTokenAddress) {
+              setTimeout(() => {
+                setTokenAddress(tokenMint);
+              }, 1000); // Wait 1 seconds after buy to redirect
+            }
+          } else {
+            showToast("No active wallets for quick buy", "error");
+          }
+        } else {
+          console.error('TOKEN_BUY message missing token identifier. Available properties:', Object.keys(event.data));
+          showToast("Invalid token for quick buy - missing token identifier", "error");
+        }
+      }
+    };
+
+    // Add event listener for messages
+    window.addEventListener('message', handleMessage);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [autoBuyEnabled, tokenAddress, autoBuyAmount, autoRedirectEnabled, wallets, handleTradeSubmit, showToast, setTokenAddress]);
+
+  // Send QUICKBUY_ACTIVATE to iframe when component loads without token set
+  useEffect(() => {
+    const sendQuickBuyActivate = () => {
+      const iframe = document.querySelector('iframe');
+      if (iframe && iframe.contentWindow && !tokenAddress) {
+        console.log('Sending QUICKBUY_ACTIVATE to iframe on load (no token set)');
+        iframe.contentWindow.postMessage({
+          type: 'QUICKBUY_ACTIVATE'
+        }, '*');
+      }
+    };
+
+    // Send activation message after a short delay to ensure iframe is loaded
+    const timer = setTimeout(sendQuickBuyActivate, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [tokenAddress]); // Re-run when tokenAddress changes
 
   return (
     <div className="flex-1 overflow-y-auto bg-app-primary p-4 md:p-6 relative">
@@ -471,29 +538,143 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
       </div>
       
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-        {/* Trading Card (unchanged) */}
-        <TradingCard
-          tokenAddress={tokenAddress}
-          wallets={wallets}
-          selectedDex={selectedDex}
-          setSelectedDex={setSelectedDex}
-          isDropdownOpen={isDropdownOpen}
-          setIsDropdownOpen={setIsDropdownOpen}
-          buyAmount={buyAmount}
-          setBuyAmount={setBuyAmount}
-          sellAmount={sellAmount}
-          setSellAmount={setSellAmount}
-          handleTradeSubmit={handleTradeSubmit}
-          isLoading={isLoading}
-          dexOptions={dexOptions}
-          getScriptName={getScriptName}
-          countActiveWallets={countActiveWallets}
-          currentMarketCap={currentMarketCap}
-          tokenBalances={tokenBalances}
-          onOpenFloating={onOpenFloating}
-          isFloatingCardOpen={isFloatingCardOpen}
-          solPrice={iframeData?.solPrice}
-        />
+        {/* Trading Card - only show when token is selected, otherwise show auto-buy settings */}
+        {tokenAddress ? (
+          <TradingCard
+            tokenAddress={tokenAddress}
+            wallets={wallets}
+            selectedDex={selectedDex}
+            setSelectedDex={setSelectedDex}
+            isDropdownOpen={isDropdownOpen}
+            setIsDropdownOpen={setIsDropdownOpen}
+            buyAmount={buyAmount}
+            setBuyAmount={setBuyAmount}
+            sellAmount={sellAmount}
+            setSellAmount={setSellAmount}
+            handleTradeSubmit={handleTradeSubmit}
+            isLoading={isLoading}
+            getScriptName={getScriptName}
+            countActiveWallets={countActiveWallets}
+            currentMarketCap={currentMarketCap}
+            tokenBalances={tokenBalances}
+            onOpenFloating={onOpenFloating}
+            isFloatingCardOpen={isFloatingCardOpen}
+            solPrice={iframeData?.solPrice}
+          />
+        ) : (
+          <div className="relative overflow-hidden rounded-xl shadow-xl bg-gradient-to-br from-app-secondary-80 to-app-primary-dark-50 backdrop-blur-sm p-6 border border-app-primary-20">
+            {/* Cyberpunk corner accents */}
+            <div className="absolute top-0 left-0 w-24 h-24 pointer-events-none">
+              <div className="absolute top-0 left-0 w-px h-8 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+              <div className="absolute top-0 left-0 w-8 h-px bg-gradient-to-r from-app-primary-color to-transparent"></div>
+            </div>
+            <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none">
+              <div className="absolute top-0 right-0 w-px h-8 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+              <div className="absolute top-0 right-0 w-8 h-px bg-gradient-to-l from-app-primary-color to-transparent"></div>
+            </div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 pointer-events-none">
+              <div className="absolute bottom-0 left-0 w-px h-8 bg-gradient-to-t from-app-primary-color to-transparent"></div>
+              <div className="absolute bottom-0 left-0 w-8 h-px bg-gradient-to-r from-app-primary-color to-transparent"></div>
+            </div>
+            <div className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none">
+              <div className="absolute bottom-0 right-0 w-px h-8 bg-gradient-to-t from-app-primary-color to-transparent"></div>
+              <div className="absolute bottom-0 right-0 w-8 h-px bg-gradient-to-l from-app-primary-color to-transparent"></div>
+            </div>
+            <div className="space-y-6">
+              {/* Auto redirect toggle */}
+              <div className="flex items-center justify-between bg-app-primary-60-alpha p-4 rounded-lg border border-app-primary-40 relative overflow-hidden">
+                {/* Cyberpunk corner accents - smaller version */}
+                <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none opacity-60">
+                  <div className="absolute top-0 left-0 w-px h-4 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+                  <div className="absolute top-0 left-0 w-4 h-px bg-gradient-to-r from-app-primary-color to-transparent"></div>
+                </div>
+                <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none opacity-60">
+                  <div className="absolute top-0 right-0 w-px h-4 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+                  <div className="absolute top-0 right-0 w-4 h-px bg-gradient-to-l from-app-primary-color to-transparent"></div>
+                </div>
+                
+                <div>
+                  <div className="text-app-secondary font-mono text-xs tracking-wide flex items-center">
+                    <span className="mr-2 text-app-primary-color">⟁</span>
+                    <span>AUTO REDIRECT TOKEN</span>
+                  </div>
+                  <div className="text-xs text-app-secondary-60 mt-2 ml-5">Redirect to token after buy</div>
+                </div>
+                <Switch 
+                  checked={autoRedirectEnabled} 
+                  onCheckedChange={setAutoRedirectEnabled}
+                />
+              </div>
+              
+              {/* SOL amount input */}
+              <div className="bg-app-primary-60-alpha p-4 rounded-lg border border-app-primary-40 relative overflow-hidden">
+                {/* Cyberpunk corner accents - smaller version */}
+                <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none opacity-60">
+                  <div className="absolute top-0 left-0 w-px h-4 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+                  <div className="absolute top-0 left-0 w-4 h-px bg-gradient-to-r from-app-primary-color to-transparent"></div>
+                </div>
+                <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none opacity-60">
+                  <div className="absolute top-0 right-0 w-px h-4 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+                  <div className="absolute top-0 right-0 w-4 h-px bg-gradient-to-l from-app-primary-color to-transparent"></div>
+                </div>
+                
+                <div className="text-app-secondary font-mono text-xs tracking-wide mb-3 flex items-center">
+                  <span className="mr-2 text-app-primary-color">⟁</span>
+                  <span>SOL AMOUNT</span>
+                </div>
+                
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={autoBuyAmount}
+                    onChange={(e) => setAutoBuyAmount(e.target.value)}
+                    min="0.001"
+                    step="0.001"
+                    className="w-full px-2 py-2 bg-app-primary-80-alpha border border-app-primary-40 rounded-lg 
+                           text-app-primary placeholder-app-secondary-60 font-mono text-sm 
+                           focus:outline-none focus-border-primary focus:ring-1 focus:ring-app-primary-40 
+                           transition-all duration-300 shadow-inner-black-80
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="Enter SOL amount"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-app-primary-color text-xs font-mono font-bold">
+                    SOL
+                  </div>
+                </div>
+              </div>
+              
+              {/* Active wallets info */}
+              <div className="bg-app-primary-60-alpha p-4 rounded-lg border border-app-primary-40 relative overflow-hidden">
+                {/* Cyberpunk corner accents - smaller version */}
+                <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none opacity-60">
+                  <div className="absolute top-0 left-0 w-px h-4 bg-gradient-to-b from-app-primary-color to-transparent"></div>
+                  <div className="absolute top-0 left-0 w-4 h-px bg-gradient-to-r from-app-primary-color to-transparent"></div>
+                </div>
+                <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none opacity-60">
+                  <div className="absolute bottom-0 right-0 w-px h-4 bg-gradient-to-t from-app-primary-color to-transparent"></div>
+                  <div className="absolute bottom-0 right-0 w-4 h-px bg-gradient-to-l from-app-primary-color to-transparent"></div>
+                </div>
+                
+                <div className="text-app-secondary font-mono text-xs tracking-wide mb-3 flex items-center">
+                  <span className="mr-2 text-app-primary-color">⟁</span>
+                  <span>ACTIVE WALLETS</span>
+                </div>
+                
+                <div className="text-xs text-app-secondary-60 flex items-center justify-between bg-app-primary-dark p-2 rounded border border-app-primary-40">
+                  <span>Wallets selected to buy:</span>
+                  <span className="text-app-primary-color font-mono font-bold">{countActiveWallets(wallets)}</span>
+                </div>
+                
+                {countActiveWallets(wallets) === 0 && (
+                  <div className="mt-3 text-warning text-xs font-mono flex items-center bg-app-primary-dark-50 p-2 rounded border border-warning-40">
+                    <span className="inline-block w-2 h-2 bg-warning rounded-full mr-2 animate-pulse"></span>
+                    No active wallets. Enable wallets to use auto-buy.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Token Operations */}
         <div className="space-y-4">          
@@ -637,7 +818,7 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Main Website Link */}
             <a 
-              href="https://zensei.bot" 
+              href={`https://${brand.domain}`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center justify-center py-2 px-4 rounded-lg bg-gradient-to-r 
@@ -654,12 +835,12 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
               >
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
-              ZENSEI.BOT
+              {brand.displayName}
             </a>
             
             {/* GitHub Link */}
             <a 
-              href="https://github.com/zenseibot/bundler" 
+              href={brand.githubUrl} 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center justify-center py-2 px-4 rounded-lg bg-gradient-to-r 
@@ -677,7 +858,7 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({
                 <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.934.359.31.678.92.678 1.855 0 1.337-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
               </svg>
               <span className="text-xs font-mono tracking-wider color-primary font-semibold">
-                @ZENSEIDOTBOT
+                {brand.social.twitter}
               </span>
             </a>
           </div>

@@ -6,15 +6,28 @@
 
 ## 🚀 One-Click Deployment
 
-You can deploy **zensei.bot** instantly using either **Vercel** or **Netlify** with the buttons below:
+You can deploy **Raze.bot** instantly using either **Vercel** or **Netlify** with the buttons below:
 
 <div align="center">
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/zenseibot/bundler)
-[![Deploy with Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/zenseibot/bundler)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/furydotbot/raze.bot)
+[![Deploy with Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/furydotbot/raze.bot)
 
 </div>
 
+![Raze.bot image](https://i.imgur.com/fDrfNv3.png)
+
+**Solana UI** is a multi-wallet trading platform designed for the Solana blockchain.  
+It provides users with a seamless interface to connect various Solana wallets and execute trades efficiently.
+
+> 🛠️ This project was developed by the team at [**Raze.bot**](https://raze.bot) using the open-source [**Fury SDKs**](https://github.com/furydotbot) to power its backend integrations and blockchain interactions.
+
+---
+
+## 📚 Documentation
+
+Find the full documentation here:  
+👉 [https://docs.raze.bot/how-to-use](https://docs.raze.bot/how-to-use)
 
 ---
 
@@ -30,7 +43,7 @@ You can deploy **zensei.bot** instantly using either **Vercel** or **Netlify** w
 ## 🚀 Demo
 
 Try the live version here:  
-👉 [https://zensei.bot/](https://zensei.bot)
+👉 [https://sol.app.raze.bot/](https://sol.app.raze.bot)
 
 ---
 
@@ -44,8 +57,8 @@ Try the live version here:
 ### Installation
 
 ```bash
-git clone https://github.com/zenseibot/bundler.git
-cd bundler
+git clone https://github.com/furydotbot/solana-ui.git
+cd solana-ui
 npm install
 npm run dev
 ```
@@ -57,7 +70,7 @@ Visit: `http://localhost:5173`
 ## 🗂 Project Structure
 
 ```
-zensei.bot/
+raze.bot/
 ├── src/                # Source code
 │   ├── modals/         # Modal components
 │   │   ├── BurnModal.tsx
@@ -80,6 +93,9 @@ zensei.bot/
 │   │   └── WalletsModal.tsx
 │   ├── styles/         # CSS and styling
 │   │   ├── Styles.tsx
+│   │   ├── betterskill.css
+│   │   ├── raze.css
+│   │   ├── yellow.css
 │   │   └── globals.css
 │   ├── utils/          # Utility functions
 │   │   ├── bonkcreate.ts

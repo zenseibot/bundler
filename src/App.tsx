@@ -331,6 +331,9 @@ const WalletManager: React.FC = () => {
     quickBuyMaxAmount: number;
     useQuickBuyRange: boolean;
     quickSellPercentage: number;
+    quickSellMinPercentage: number;
+    quickSellMaxPercentage: number;
+    useQuickSellRange: boolean;
     iframeData: {
     tradingStats: any;
     solPrice: number | null;
@@ -399,6 +402,9 @@ const WalletManager: React.FC = () => {
     | { type: 'SET_QUICK_BUY_MAX_AMOUNT'; payload: number }
     | { type: 'SET_USE_QUICK_BUY_RANGE'; payload: boolean }
     | { type: 'SET_QUICK_SELL_PERCENTAGE'; payload: number }
+    | { type: 'SET_QUICK_SELL_MIN_PERCENTAGE'; payload: number }
+    | { type: 'SET_QUICK_SELL_MAX_PERCENTAGE'; payload: number }
+    | { type: 'SET_USE_QUICK_SELL_RANGE'; payload: boolean }
     | { type: 'SET_IFRAME_DATA'; payload: { tradingStats: any; solPrice: number | null; currentWallets: any[]; recentTrades: { type: 'buy' | 'sell'; address: string; tokensAmount: number; avgPrice: number; solAmount: number; timestamp: number; signature: string; }[]; tokenPrice: { tokenPrice: number; tokenMint: string; timestamp: number; tradeType: 'buy' | 'sell'; volume: number; } | null; marketCap: number | null; } | null }
     | { type: 'SET_NON_WHITELISTED_TRADES'; payload: { type: 'buy' | 'sell'; address: string; tokensAmount: number; avgPrice: number; solAmount: number; timestamp: number; signature: string; tokenMint: string; marketCap: number; }[] }
     | { type: 'TOGGLE_LEFT_COLUMN'; payload?: undefined };
@@ -460,6 +466,9 @@ const WalletManager: React.FC = () => {
     quickBuyMaxAmount: 0.05,
     useQuickBuyRange: false,
     quickSellPercentage: 100,
+    quickSellMinPercentage: 25,
+    quickSellMaxPercentage: 100,
+    useQuickSellRange: false,
     iframeData: null,
     nonWhitelistedTrades: []
   };
@@ -579,6 +588,12 @@ const WalletManager: React.FC = () => {
         return { ...state, useQuickBuyRange: action.payload };
       case 'SET_QUICK_SELL_PERCENTAGE':
         return { ...state, quickSellPercentage: action.payload };
+      case 'SET_QUICK_SELL_MIN_PERCENTAGE':
+        return { ...state, quickSellMinPercentage: action.payload };
+      case 'SET_QUICK_SELL_MAX_PERCENTAGE':
+        return { ...state, quickSellMaxPercentage: action.payload };
+      case 'SET_USE_QUICK_SELL_RANGE':
+        return { ...state, useQuickSellRange: action.payload };
       case 'SET_IFRAME_DATA':
         return { ...state, iframeData: action.payload };
       case 'SET_NON_WHITELISTED_TRADES':
@@ -642,6 +657,9 @@ const WalletManager: React.FC = () => {
     setQuickBuyMaxAmount: (amount: number) => dispatch({ type: 'SET_QUICK_BUY_MAX_AMOUNT', payload: amount }),
     setUseQuickBuyRange: (useRange: boolean) => dispatch({ type: 'SET_USE_QUICK_BUY_RANGE', payload: useRange }),
     setQuickSellPercentage: (percentage: number) => dispatch({ type: 'SET_QUICK_SELL_PERCENTAGE', payload: percentage }),
+    setQuickSellMinPercentage: (percentage: number) => dispatch({ type: 'SET_QUICK_SELL_MIN_PERCENTAGE', payload: percentage }),
+    setQuickSellMaxPercentage: (percentage: number) => dispatch({ type: 'SET_QUICK_SELL_MAX_PERCENTAGE', payload: percentage }),
+    setUseQuickSellRange: (useRange: boolean) => dispatch({ type: 'SET_USE_QUICK_SELL_RANGE', payload: useRange }),
     setIframeData: (data: { tradingStats: any; solPrice: number | null; currentWallets: any[]; recentTrades: { type: 'buy' | 'sell'; address: string; tokensAmount: number; avgPrice: number; solAmount: number; timestamp: number; signature: string; }[]; tokenPrice: { tokenPrice: number; tokenMint: string; timestamp: number; tradeType: 'buy' | 'sell'; volume: number; } | null; marketCap: number | null; } | null) => dispatch({ type: 'SET_IFRAME_DATA', payload: data }),
     setNonWhitelistedTrades: (trades: { type: 'buy' | 'sell'; address: string; tokensAmount: number; avgPrice: number; solAmount: number; timestamp: number; signature: string; tokenMint: string; marketCap: number; }[]) => dispatch({ type: 'SET_NON_WHITELISTED_TRADES', payload: trades }),
     toggleLeftColumn: () => dispatch({ type: 'TOGGLE_LEFT_COLUMN' })
@@ -705,18 +723,6 @@ const WalletManager: React.FC = () => {
     }
   }, [state.iframeData?.marketCap]);
 
-  // DEX options for trading
-  const dexOptions = [
-    { value: 'auto', label: '⭐ Auto', icon: '⭐' },
-    { value: 'pumpfun', label: 'PumpFun' },
-    { value: 'moonshot', label: 'Moonshot' },
-    { value: 'pumpswap', label: 'PumpSwap' },
-    { value: 'raydium', label: 'Raydium' },
-    { value: 'launchpad', label: 'Launchpad' },
-    { value: 'boopfun', label: 'BoopFun' },
-    { value: 'meteora', label: 'Meteora' },
-  ];
-
   // Handle trade submission
   const handleTradeSubmit = async (wallets: WalletType[], isBuyMode: boolean, dex?: string, buyAmount?: string, sellAmount?: string) => {
     memoizedCallbacks.setIsRefreshing(true);
@@ -746,8 +752,7 @@ const WalletManager: React.FC = () => {
       const result = await executeTrade(dex, wallets, config, isBuyMode, state.solBalances);
       
       if (result.success) {
-        const dexLabel = dexOptions.find(d => d.value === dex)?.label || dex;
-        showToast(`${dexLabel} ${isBuyMode ? 'Buy' : 'Sell'} transactions submitted successfully`, "success");
+        showToast(`${isBuyMode ? 'Buy' : 'Sell'} transactions submitted successfully`, "success");
       } else {
         showToast(`${dex} ${isBuyMode ? 'Buy' : 'Sell'} failed: ${result.error}`, "error");
       }
@@ -835,6 +840,15 @@ const WalletManager: React.FC = () => {
         if (savedQuickBuyPreferences.quickSellPercentage !== undefined) {
           memoizedCallbacks.setQuickSellPercentage(savedQuickBuyPreferences.quickSellPercentage);
         }
+        if (savedQuickBuyPreferences.quickSellMinPercentage !== undefined) {
+          memoizedCallbacks.setQuickSellMinPercentage(savedQuickBuyPreferences.quickSellMinPercentage);
+        }
+        if (savedQuickBuyPreferences.quickSellMaxPercentage !== undefined) {
+          memoizedCallbacks.setQuickSellMaxPercentage(savedQuickBuyPreferences.quickSellMaxPercentage);
+        }
+        if (savedQuickBuyPreferences.useQuickSellRange !== undefined) {
+          memoizedCallbacks.setUseQuickSellRange(savedQuickBuyPreferences.useQuickSellRange);
+        }
       }
     };
 
@@ -870,10 +884,13 @@ const WalletManager: React.FC = () => {
       quickBuyMinAmount: state.quickBuyMinAmount,
       quickBuyMaxAmount: state.quickBuyMaxAmount,
       quickSellPercentage: state.quickSellPercentage,
-      useQuickBuyRange: state.useQuickBuyRange
+      useQuickBuyRange: state.useQuickBuyRange,
+      quickSellMinPercentage: state.quickSellMinPercentage,
+      quickSellMaxPercentage: state.quickSellMaxPercentage,
+      useQuickSellRange: state.useQuickSellRange
     };
     saveQuickBuyPreferencesToCookies(preferences);
-  }, [state.quickBuyEnabled, state.quickBuyAmount, state.quickBuyMinAmount, state.quickBuyMaxAmount, state.quickSellPercentage, state.useQuickBuyRange]);
+  }, [state.quickBuyEnabled, state.quickBuyAmount, state.quickBuyMinAmount, state.quickBuyMaxAmount, state.quickSellPercentage, state.useQuickBuyRange, state.quickSellMinPercentage, state.quickSellMaxPercentage, state.useQuickSellRange]);
 
   // Update connection when RPC endpoint changes
   useEffect(() => {
@@ -1054,32 +1071,50 @@ const WalletManager: React.FC = () => {
               placeholder="TOKEN ADDRESS"
               value={state.tokenAddress}
               onChange={(e) => memoizedCallbacks.setTokenAddress(e.target.value)}
-              className="w-full bg-app-secondary border border-app-primary-40 rounded px-3 py-2 text-sm text-app-primary focus-border-primary focus:outline-none cyberpunk-input font-mono tracking-wider"
+              className="w-full bg-app-secondary border border-app-primary-40 rounded px-3 py-2 pr-16 text-sm text-app-primary focus-border-primary focus:outline-none cyberpunk-input font-mono tracking-wider"
             />
-            <div className="absolute right-3 top-2.5 color-primary-40 text-xs font-mono">SOL</div>
-          </div>
-          
-          <WalletTooltip content="Paste from clipboard" position="bottom">
-            <button
-              className="p-2 border border-app-primary-40 hover-border-primary bg-app-secondary rounded cyberpunk-btn"
-              onClick={async () => {
-                try {
-                  const text = await navigator.clipboard.readText();
-                  if (text) {
-                    memoizedCallbacks.setTokenAddress(text);
-                    showToast("Token address pasted from clipboard", "success");
-                  }
-                } catch (err) {
-                  showToast("Failed to read from clipboard", "error");
-                }
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="color-primary">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-              </svg>
-            </button>
-          </WalletTooltip>          
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+              {state.tokenAddress && (
+                <WalletTooltip content="Clear token address" position="bottom">
+                  <button
+                    className="color-primary-40 text-xs font-mono p-1"
+                    onClick={() => {
+                      memoizedCallbacks.setTokenAddress('');
+                      showToast("Token address cleared", "success");
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="color-primary opacity-60 hover:opacity-100 transition-opacity">
+                       <polyline points="3,6 5,6 21,6"></polyline>
+                       <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                       <line x1="10" y1="11" x2="10" y2="17"></line>
+                       <line x1="14" y1="11" x2="14" y2="17"></line>
+                     </svg>
+                  </button>
+                </WalletTooltip>
+              )}
+              <WalletTooltip content="Paste from clipboard" position="bottom">
+                <button
+                  className="color-primary-40 text-xs font-mono p-1"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) {
+                        memoizedCallbacks.setTokenAddress(text);
+                        showToast("Token address pasted from clipboard", "success");
+                      }
+                    } catch (err) {
+                      showToast("Failed to read from clipboard", "error");
+                    }
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="color-primary opacity-60 hover:opacity-100 transition-opacity">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                  </svg>
+                </button>
+              </WalletTooltip>
+            </div>
+          </div>          
           
           <WalletTooltip content="Open Settings" position="bottom">
             <button 
@@ -1130,6 +1165,7 @@ const WalletManager: React.FC = () => {
               <div className="backdrop-blur-sm bg-app-primary-99 overflow-y-auto">
                 <ActionsPage
                  tokenAddress={state.tokenAddress}
+                 setTokenAddress={memoizedCallbacks.setTokenAddress}
                  transactionFee={state.config.transactionFee}
                  handleRefresh={handleRefresh}
                  wallets={state.wallets}
@@ -1182,6 +1218,7 @@ const WalletManager: React.FC = () => {
                   handleSortWallets={() => handleSortWallets(state.wallets, state.sortDirection, memoizedCallbacks.setSortDirection, state.solBalances, memoizedCallbacks.setWallets)}
                   connection={state.connection}
                   solBalances={state.solBalances}
+                  setSolBalances={memoizedCallbacks.setSolBalances}
                   tokenBalances={state.tokenBalances}
                   quickBuyEnabled={state.quickBuyEnabled}
                   setQuickBuyEnabled={memoizedCallbacks.setQuickBuyEnabled}
@@ -1195,6 +1232,12 @@ const WalletManager: React.FC = () => {
                   setUseQuickBuyRange={memoizedCallbacks.setUseQuickBuyRange}
                   quickSellPercentage={state.quickSellPercentage}
                   setQuickSellPercentage={memoizedCallbacks.setQuickSellPercentage}
+                  quickSellMinPercentage={state.quickSellMinPercentage}
+                  setQuickSellMinPercentage={memoizedCallbacks.setQuickSellMinPercentage}
+                  quickSellMaxPercentage={state.quickSellMaxPercentage}
+                  setQuickSellMaxPercentage={memoizedCallbacks.setQuickSellMaxPercentage}
+                  useQuickSellRange={state.useQuickSellRange}
+                  setUseQuickSellRange={memoizedCallbacks.setUseQuickSellRange}
                 />
               )}
             </div>
@@ -1215,6 +1258,7 @@ const WalletManager: React.FC = () => {
             <div className="backdrop-blur-sm bg-app-primary-99 overflow-y-auto">
               <ActionsPage
               tokenAddress={state.tokenAddress}
+              setTokenAddress={memoizedCallbacks.setTokenAddress}
               transactionFee={state.config.transactionFee}
               handleRefresh={handleRefresh}
               wallets={state.wallets}
@@ -1272,6 +1316,12 @@ const WalletManager: React.FC = () => {
                   setUseQuickBuyRange={memoizedCallbacks.setUseQuickBuyRange}
                   quickSellPercentage={state.quickSellPercentage}
                   setQuickSellPercentage={memoizedCallbacks.setQuickSellPercentage}
+                  quickSellMinPercentage={state.quickSellMinPercentage}
+                  setQuickSellMinPercentage={memoizedCallbacks.setQuickSellMinPercentage}
+                  quickSellMaxPercentage={state.quickSellMaxPercentage}
+                  setQuickSellMaxPercentage={memoizedCallbacks.setQuickSellMaxPercentage}
+                  useQuickSellRange={state.useQuickSellRange}
+                  setUseQuickSellRange={memoizedCallbacks.setUseQuickSellRange}
                 />
               ) : (
                 <div className="p-4 text-center text-app-secondary">
@@ -1295,6 +1345,7 @@ const WalletManager: React.FC = () => {
             ActionsPage: (
               <ActionsPage
                 tokenAddress={state.tokenAddress}
+                setTokenAddress={memoizedCallbacks.setTokenAddress}
                 transactionFee={state.config.transactionFee}
                 handleRefresh={handleRefresh}
                 wallets={state.wallets}
@@ -1428,7 +1479,6 @@ const WalletManager: React.FC = () => {
         setSellAmount={configCallbacks.setSellAmount}
         handleTradeSubmit={handleTradeSubmit}
         isLoading={state.isRefreshing}
-        dexOptions={dexOptions}
         getScriptName={getScriptName}
         countActiveWallets={countActiveWallets}
         currentMarketCap={state.currentMarketCap}

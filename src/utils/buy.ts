@@ -1,6 +1,7 @@
 import { Keypair, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { loadConfigFromCookies, loadUserFromCookies } from '../Utils';
+import { brand } from '../config/brandConfig';
 
 // Constants
 const MAX_BUNDLES_PER_SECOND = 2;
@@ -23,7 +24,7 @@ export type BundleMode = 'single' | 'batch' | 'all-in-one';
 
 export interface BuyConfig {
   tokenAddress: string;
-  protocol: 'pumpfun' | 'moonshot' | 'launchpad' | 'raydium' | 'pumpswap' | 'auto' | 'boopfun' | 'meteora' | 'auto';
+  protocol: 'auto';
   solAmount: number;
   amounts?: number[]; // Optional custom amounts per wallet
   slippageBps?: number; // Slippage in basis points (e.g., 100 = 1%)
@@ -173,12 +174,11 @@ const getPartiallyPreparedTransactions = async (
       requestBody.telegram = user;
     }
     
-    console.log(appConfig)
     const response = await fetch(`${baseUrl}/api/tokens/buy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': 'f9b4789bd943173e8cac8d75d3ad8e2ce725183642a699201138540d71ca0b0c' 
+        'X-API-Key': brand.api.key
       },
       body: JSON.stringify(requestBody),
     });
@@ -606,7 +606,7 @@ export const validateBuyInputs = (
     return { valid: false, error: 'Protocol is required' };
   }
   
-  const supportedProtocols = ['pumpfun', 'moonshot', 'launchpad', 'raydium', 'pumpswap', 'auto', 'boopfun', 'meteora', 'auto'];
+  const supportedProtocols = ['auto'];
 
   if (!supportedProtocols.includes(config.protocol)) {
     return { valid: false, error: `Unsupported protocol: ${config.protocol}. Supported protocols: ${supportedProtocols.join(', ')}` };

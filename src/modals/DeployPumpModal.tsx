@@ -60,7 +60,7 @@ export const DeployPumpModal: React.FC<DeployPumpModalProps> = ({
   const generateMintPubkey = async () => {
     setIsGenerating(true);
     try {
-      const baseUrl = (window as any).tradingServerUrl.replace(/\/+$/, '');
+      const baseUrl = 'https://solana.fury.bot';
       const mintResponse = await fetch(`${baseUrl}/api/utilities/generate-mint`);
       const data = await mintResponse.json();
       
@@ -132,7 +132,7 @@ export const DeployPumpModal: React.FC<DeployPumpModalProps> = ({
       formData.append('image', file);
       
       // Create URL based on base URL
-      const baseUrl = 'https://img.raze.bot';
+      const baseUrl = 'https://img.fury.bot';
       const uploadUrl = `${baseUrl}/upload-image`;
       
       // Upload with progress tracking

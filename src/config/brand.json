@@ -1,0 +1,35 @@
+{
+  "brand": {
+    "name": "zensei.bot",
+    "displayName": "zenseidotbot",
+    "altText": "zensei Bundler",
+    "domain": "zensei.bot",
+    "appUrl": "https://zensei.bot",
+    "docsUrl": "https://docs.zensei.bot",
+    "githubUrl": "https://github.com/zenseidotbot/solana-ui/",
+    "githubOrg": "https://github.com/zenseidotbot",
+    "social": {
+      "twitter": "@zenseidotbot",
+      "github": "zenseidotbot"
+    },
+    "seo": {
+      "title": "Bundler - zensei.bot",
+      "ogTitle": "zenseidotbot",
+      "description": "zenseidotbot",
+      "ogImage": "https://zensei.bot/images/bannermeta.jpg",
+      "twitterImage": "https://zensei.bot/images/bannermeta.png"
+    },
+    "favicon": {
+      "baseUrl": "https://zensei.bot/images/favicon",
+      "themeColor": "#000000",
+      "tileColor": "#000000"
+    },
+    "api": {
+      "key": "5fa51682a11db8e9222844d49e29970d03738108b9882d356ef8f8738b0a26c6"
+    },
+    "theme": {
+      "name": "yellow",
+      "css": "./src/styles/yellow.css"
+    }
+  }
+}
