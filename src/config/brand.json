@@ -28,8 +28,7 @@
       "key": "5fa51682a11db8e9222844d49e29970d03738108b9882d356ef8f8738b0a26c6"
     },
     "theme": {
-      "name": "yellow",
-      "css": "/src/styles/yellow.css"
+      "name": "yellow"
     }
   }
 }
