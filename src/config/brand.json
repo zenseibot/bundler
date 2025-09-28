@@ -29,7 +29,7 @@
     },
     "theme": {
       "name": "yellow",
-      "css": "./src/styles/yellow.css"
+      "css": "./styles/yellow.css"
     }
   }
 }
